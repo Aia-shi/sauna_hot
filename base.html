@@ -2,14 +2,17 @@
   <head>
     <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aframe-particle-system-component@1.1.3/dist/aframe-particle-system-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>//collider
+    
+
+    <!-- script for dimming light for rig respawn poit to backwall-->
     <script>
+
       AFRAME.registerComponent('proximity-light', 
       {
         init: function () 
         {
           this.player = document.querySelector('#player');
-          this.light = document.querySelector('#roomLight');
+          this.light = document.querySelector('#Light');
           this.current = 0.6; // starting dim light
         }, tick: function () 
         
@@ -25,48 +28,80 @@
           this.light.setAttribute('intensity', this.current); // smooth transition
         }
       });
+
     </script>
+
+  <script>
+
+    window.addEventListener('load', () => {
+
+    let sitting = false;
+    const button = document.querySelector('#Button');
+    const rig = document.querySelector('#rig');
+
+    button.addEventListener('click', ()=>{
+      if(!sitting) 
+      {
+      rig.setAttribute('animation', {
+          property: 'position', to: '0 0.6 -2.5', dur: 800, easing: 'easeInOutQuad'
+        })
+      } 
+        else 
+        {
+          rig.setAttribute('animation', { property: 'position', to: '0 0 2', dur: 800, easing: 'easeInOutQuad'});
+        }
+
+        rig.setAttribute('wasd-controls', 'enabled: true');
+        button.setAttribute('text', 'value:SIT');
+        sitting = false;
+    });
+  });
+
+</script>
+  </script>
+
+
   </head>
 
   <body>
+  <a-scene fog="type: linear; color: #C2A580; near: 5; far: 10">
+  <!-- assety-->
+    <a-assets>
+    <a-asset-item id ="bench" src= "bench.glb"> </a-asset-item>
+    <a-asset-item id = "bench2" src  ="bench2.glb"> </a-asset-item>
+    </a-assets>
 
-    <a-scene fog="type: linear; color: #C2A580; near: 5; far: 10">
+  <!-- moderuuu-->
+    <a-entity gltf-model="#bench" position ="0 0 -6.6" scale ="1.5 1.5 1.5"> </a-entity>
+    <a-entity gltf-model= "#bench2" position="0 0.5 -6" scale= "1.5 1.5 1.5"> </a-entity>
 
-  <a-assets>
-  <a-asset-item id="bench" src="bench.glb"> </a-asset-item>
-  <a-asset-item id="bench2" src="bench2.glb"> </a-asset-item>
-  </a-assets>
+    <a-entity id = "rig" position= "0 0 2">
+    <a-camera id= "player" position="0 1.6 2" wasd-controls="acceleration: 20; fly:false" look-controls>
+ <a-cursor></a-cursor>
 
-<a-entity 
-  gltf-model="#bench"
-  position="0 0 -6.6"
-    scale="1.5 1.5 1.5">
-</a-entity>
+  <a-plane 
+    id="Button"
+    position="0 -0.5 -1"
+    width="0.6"
+    height="0.25"
+    color="#222"
+    text="value: USIaDz; align: center; color: #fff">
+      </a-plane>
+    </a-camera>
+    </a-entity>
 
-<a-entity 
-  gltf-model="#bench2"
-  position="0 0.5 -6"
-    scale="1.5 1.5 1.5">
-</a-entity>
-
-      <a-camera id="player" position="0 1.6 2" wasd-controls="acceleration: 20; fly:false" look-controls>
-      <a-cursor> </a-cursor> </a-camera>
-
-      <a-light id="roomLight" type="point" position="0 3 -4" intensity="0.2" color="#ffffff"> </a-light>
-
+    <!-- do skryptu z swiatelkiem-->
+      <a-light id="Light" type="point" position="0 3 -4" intensity="0.2" color="#ffffff"> </a-light>
       <a-box position="-3.3 1.05 -3" width="0.6" height="0.1" color="#000000"></a-box> //whole scene
-      <a-box position="-3.3 0.5 -3" color="#51E9F0"></a-box>
 
       <a-box position="0 1 -6" width="2" height="2" depth="2" visible="false" proximity-light> </a-box> //trigger zone
-
-      <a-box position="0 2 -8" width="8" height="4" depth="0.1" color="#C2A580"></a-box>
-
-      <a-box position="-4 2 -4" rotation="0 90 0" width="8" height="4" depth="0.1" color="#C2A580"></a-box> //backWall
-      <a-box position="4 2 -4" rotation="0 90 0" width="8" height="4" depth="0.1" color="#C2A580"></a-box> //right wall
-      <a-plane position="0 0 -4" rotation="-90 0 0" width="8" height="8" color="#BE9F79"></a-plane> //flooring
-
+  <!-- scena-->
+      <a-box position="-4 2 -4" rotation="0 90 0" width ="8" height="4" depth="0.1" color="#C2A580"></a-box> //backWall
+      <a-box position="4 2 -4" rotation="0 90 0" width= "8" height ="4" depth="0.1" color="#C2A580"></a-box> //right wall
+      <a-plane position="0 0 -4" rotation="-90 0 0" width="8" height ="8" color="#BE9F79"></a-plane> //flooring
       <a-cylinder position="-3.3 0.3 -1" radius="0.5" height="0.5" color="#FFC65D"></a-cylinder>
-
+      <a-box position="0 2 -8" width ="8" height="4" depth= "0.1" color="#C2A580"></a-box>
+      <a-box position="-3.3 0.5 -3" color="#51E9F0"></a-box>
 
 
       <a-sky color="#000000"></a-sky>
