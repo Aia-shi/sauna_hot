@@ -41,6 +41,8 @@
             if (this.tooltip) this.tooltip.setAttribute('visible', false);
           };
           this.spawnSteam = () => {
+            if (window.saunaTemperature.dead) return;
+            window.saunaTemperature.addHeat();
             if (!this.steamContainer) return;
             for (let i = 0; i < 18; i++) {
               const puff = document.createElement('a-sphere');
@@ -91,6 +93,43 @@
           this.el.removeEventListener('click', this.spawnSteam);
         }
       });
+
+      window.saunaTemperature = {
+        value: 60,
+        dead: false,
+        updateDisplay: function () {
+          const display = document.getElementById('temp-value');
+          const panel = document.getElementById('temp-display');
+          if (display) display.textContent = this.value + '°C';
+          if (panel) {
+            if (this.value >= 100) {
+              panel.style.borderColor = '#e74c3c';
+              panel.style.color = '#e74c3c';
+            } else if (this.value >= 80) {
+              panel.style.borderColor = '#f39c12';
+              panel.style.color = '#f39c12';
+            } else {
+              panel.style.borderColor = '#3498db';
+              panel.style.color = '#3498db';
+            }
+          }
+        },
+        addHeat: function () {
+          if (this.dead) return;
+          this.value += 5;
+          this.updateDisplay();
+          if (this.value >= 160) {
+            this.triggerDeath();
+          }
+        },
+        triggerDeath: function () {
+          this.dead = true;
+          const overlay = document.getElementById('death-overlay');
+          if (overlay) overlay.style.display = 'flex';
+          const rig = document.querySelector('#rig');
+          if (rig) rig.setAttribute('wasd-controls', 'enabled: false');
+        }
+      };
 
       window.saunaTimer = {
         interval: null,
@@ -222,6 +261,15 @@
   </head>
 
   <body>
+  <div id="temp-display" style="position:fixed;top:20px;left:20px;z-index:1000;background:rgba(0,0,0,0.8);color:#3498db;padding:12px 18px;border-radius:8px;font-family:monospace;border:2px solid #3498db;min-width:120px;text-align:center;">
+    <div style="font-size:11px;color:#aaa;margin-bottom:6px;font-family:sans-serif;">Temperatura</div>
+    <div id="temp-value" style="font-size:32px;font-weight:bold;">60°C</div>
+  </div>
+  <div id="death-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);color:#e74c3c;align-items:center;justify-content:center;flex-direction:column;font-family:sans-serif;text-align:center;padding:24px;">
+    <div style="font-size:42px;font-weight:bold;margin-bottom:16px;">Przegrzales sie!</div>
+    <div style="font-size:22px;color:#fff;max-width:480px;line-height:1.5;">Temperatura osiagnela 160°C. Ktos sie przegrzal i umiera...</div>
+    <button onclick="location.reload()" style="margin-top:28px;padding:12px 28px;font-size:16px;border:none;border-radius:6px;background:#e74c3c;color:#fff;cursor:pointer;">Zacznij od nowa</button>
+  </div>
   <div id="timer-display" style="display:none;position:fixed;top:20px;right:20px;z-index:1000;background:rgba(0,0,0,0.8);color:#4ecca3;padding:12px 18px;border-radius:8px;font-family:monospace;border:2px solid #4ecca3;min-width:120px;text-align:center;">
     <div id="timer-label" style="font-size:11px;color:#aaa;margin-bottom:6px;font-family:sans-serif;">Sesja sauny</div>
     <div id="timer-countdown" style="font-size:32px;font-weight:bold;">15:00</div>
