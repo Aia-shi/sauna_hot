@@ -1,7 +1,6 @@
 <html>
   <head>
     <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aframe-particle-system-component@1.1.3/dist/aframe-particle-system-component.min.js"></script>
     
 
     <!-- script for dimming light for rig respawn poit to backwall-->
@@ -29,40 +28,214 @@
         }
       });
 
-    </script>
+      AFRAME.registerComponent('ladle-interaction', {
+        init: function () {
+          const root = this.el.parentEl;
+          this.tooltip = root.querySelector('#ladle-tooltip');
+          this.steamContainer = document.querySelector('#stove-steam');
 
-  <script>
+          this.showTooltip = () => {
+            if (this.tooltip) this.tooltip.setAttribute('visible', true);
+          };
+          this.hideTooltip = () => {
+            if (this.tooltip) this.tooltip.setAttribute('visible', false);
+          };
+          this.spawnSteam = () => {
+            if (!this.steamContainer) return;
+            for (let i = 0; i < 18; i++) {
+              const puff = document.createElement('a-sphere');
+              const offsetX = (Math.random() - 0.5) * 0.45;
+              const offsetZ = (Math.random() - 0.5) * 0.35;
+              const driftX = offsetX + (Math.random() - 0.5) * 0.3;
+              const size = 0.03 + Math.random() * 0.05;
+              const delay = i * 100;
+              const rise = 1.4 + Math.random() * 1.0;
 
-    window.addEventListener('load', () => {
+              puff.setAttribute('radius', size);
+              puff.setAttribute('position', `${offsetX} 0 ${offsetZ}`);
+              puff.setAttribute('material', 'color: #f0f0f0; transparent: true; opacity: 0.75');
+              puff.setAttribute('animation__rise', {
+                property: 'position',
+                to: `${driftX} ${rise} ${offsetZ + (Math.random() - 0.5) * 0.2}`,
+                dur: 2600 + Math.random() * 1000,
+                delay: delay,
+                easing: 'easeOutSine'
+              });
+              puff.setAttribute('animation__fade', {
+                property: 'material.opacity',
+                to: 0,
+                dur: 2800,
+                delay: delay + 400,
+                easing: 'easeInQuad'
+              });
+              puff.setAttribute('animation__grow', {
+                property: 'scale',
+                to: '2.2 2.2 2.2',
+                dur: 2600,
+                delay: delay,
+                easing: 'easeOutQuad'
+              });
 
-    let sitting = false;
-    const button = document.querySelector('#Button');
-    const rig = document.querySelector('#rig');
+              this.steamContainer.appendChild(puff);
+              setTimeout(() => puff.parentNode && puff.remove(), 4000 + delay);
+            }
+          };
 
-    button.addEventListener('click', ()=>{
-      if(!sitting) 
-      {
-      rig.setAttribute('animation', {
-          property: 'position', to: '0 0.6 -2.5', dur: 800, easing: 'easeInOutQuad'
-        })
-      } 
-        else 
-        {
-          rig.setAttribute('animation', { property: 'position', to: '0 0 2', dur: 800, easing: 'easeInOutQuad'});
+          this.el.addEventListener('mouseenter', this.showTooltip);
+          this.el.addEventListener('mouseleave', this.hideTooltip);
+          this.el.addEventListener('click', this.spawnSteam);
+        },
+        remove: function () {
+          this.el.removeEventListener('mouseenter', this.showTooltip);
+          this.el.removeEventListener('mouseleave', this.hideTooltip);
+          this.el.removeEventListener('click', this.spawnSteam);
         }
+      });
 
-        rig.setAttribute('wasd-controls', 'enabled: true');
-        button.setAttribute('text', 'value:SIT');
-        sitting = false;
-    });
-  });
+      window.saunaTimer = {
+        interval: null,
+        endTime: null,
+        start: function (minutes) {
+          clearInterval(this.interval);
+          this.endTime = Date.now() + minutes * 60 * 1000;
+          const display = document.getElementById('timer-display');
+          const label = document.getElementById('timer-label');
+          if (display) display.style.display = 'block';
+          if (label) label.textContent = 'Sesja: ' + minutes + ' min';
+          this.tick();
+          this.interval = setInterval(() => this.tick(), 1000);
+        },
+        tick: function () {
+          const countdown = document.getElementById('timer-countdown');
+          if (!countdown || !this.endTime) return;
+          const remaining = Math.max(0, this.endTime - Date.now());
+          const mins = Math.floor(remaining / 60000);
+          const secs = Math.floor((remaining % 60000) / 1000);
+          countdown.textContent = mins + ':' + secs.toString().padStart(2, '0');
+          if (remaining <= 0) {
+            clearInterval(this.interval);
+            countdown.textContent = '0:00';
+          }
+        }
+      };
 
-</script>
+      AFRAME.registerComponent('timer-device', {
+        init: function () {
+          const root = this.el.parentEl;
+          this.menu = root.querySelector('#timer-menu');
+          this.tooltip = root.querySelector('#timer-tooltip');
+
+          this.showTooltip = () => {
+            if (this.tooltip) this.tooltip.setAttribute('visible', true);
+          };
+          this.hideTooltip = () => {
+            if (this.tooltip) this.tooltip.setAttribute('visible', false);
+          };
+          this.toggleMenu = () => {
+            if (!this.menu) return;
+            const open = this.menu.getAttribute('visible') === 'true';
+            this.menu.setAttribute('visible', !open);
+          };
+
+          this.el.addEventListener('mouseenter', this.showTooltip);
+          this.el.addEventListener('mouseleave', this.hideTooltip);
+          this.el.addEventListener('click', this.toggleMenu);
+        },
+        remove: function () {
+          this.el.removeEventListener('mouseenter', this.showTooltip);
+          this.el.removeEventListener('mouseleave', this.hideTooltip);
+          this.el.removeEventListener('click', this.toggleMenu);
+        }
+      });
+
+      AFRAME.registerComponent('timer-option', {
+        schema: {
+          minutes: { type: 'number', default: 5 }
+        },
+        init: function () {
+          this.selectTime = () => {
+            window.saunaTimer.start(this.data.minutes);
+            const menu = document.querySelector('#timer-menu');
+            if (menu) menu.setAttribute('visible', false);
+          };
+          this.el.addEventListener('click', this.selectTime);
+        },
+        remove: function () {
+          this.el.removeEventListener('click', this.selectTime);
+        }
+      });
+
+      AFRAME.registerComponent('bench-seat', {
+        schema: {
+          sitX: { type: 'number', default: 0 },
+          sitY: { type: 'number', default: 0.6 },
+          sitZ: { type: 'number', default: -6.29 }
+        },
+        init: function () {
+          const root = this.el.parentEl;
+          this.tooltip = root.querySelector('.bench-tooltip');
+          this.rig = document.querySelector('#rig');
+          this.sitting = false;
+          this.defaultPosition = { x: 0, y: 0, z: 2 };
+
+          this.showTooltip = () => {
+            if (this.tooltip) this.tooltip.setAttribute('visible', true);
+          };
+          this.hideTooltip = () => {
+            if (this.tooltip) this.tooltip.setAttribute('visible', false);
+          };
+          this.toggleSit = () => {
+            if (!this.rig) return;
+            if (!this.sitting) {
+              this.rig.setAttribute('animation', {
+                property: 'position',
+                to: `${this.data.sitX} ${this.data.sitY} ${this.data.sitZ}`,
+                dur: 800,
+                easing: 'easeInOutQuad'
+              });
+              this.sitting = true;
+            } else {
+              this.rig.setAttribute('animation', {
+                property: 'position',
+                to: `${this.defaultPosition.x} ${this.defaultPosition.y} ${this.defaultPosition.z}`,
+                dur: 800,
+                easing: 'easeInOutQuad'
+              });
+              this.sitting = false;
+            }
+          };
+
+          this.el.addEventListener('mouseenter', this.showTooltip);
+          this.el.addEventListener('mouseleave', this.hideTooltip);
+          this.el.addEventListener('click', this.toggleSit);
+        },
+        remove: function () {
+          this.el.removeEventListener('mouseenter', this.showTooltip);
+          this.el.removeEventListener('mouseleave', this.hideTooltip);
+          this.el.removeEventListener('click', this.toggleSit);
+        }
+      });
+
+    </script>
 
 
   </head>
 
   <body>
+  <div id="timer-display" style="display:none;position:fixed;top:20px;right:20px;z-index:1000;background:rgba(0,0,0,0.8);color:#4ecca3;padding:12px 18px;border-radius:8px;font-family:monospace;border:2px solid #4ecca3;min-width:120px;text-align:center;">
+    <div id="timer-label" style="font-size:11px;color:#aaa;margin-bottom:6px;font-family:sans-serif;">Sesja sauny</div>
+    <div id="timer-countdown" style="font-size:32px;font-weight:bold;">15:00</div>
+  </div>
+  <div id="file-warning" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#c0392b;color:#fff;padding:12px 16px;font-family:sans-serif;font-size:14px;">
+    Modele 3D (.glb) nie działają przez file://. Uruchom stronę przez serwer HTTP:
+    dwuklik na <strong>start-server.bat</strong> i otwórz http://localhost:5500/base.html
+    (adres powinien zaczynać się od http://localhost, nie file://).
+  </div>
+  <script>
+    if (window.location.protocol === 'file:') {
+      document.getElementById('file-warning').style.display = 'block';
+    }
+  </script>
   <a-scene fog="type: linear; color: #C2A580; near: 5; far: 10">
   <!-- assety-->
     <a-assets>
@@ -73,45 +246,144 @@
       <a-asset-item id="bucket" src="Bucket.glb"></a-asset-item>
     </a-assets>
 
-    <!-- benches along back wall (z = -8) -->
-    <a-entity gltf-model="#bench" position="0 0.35 -7.3" rotation="0 0 0" scale="1.5 1.5 1.5"></a-entity>
-    <a-entity gltf-model="#bench2" position="0 1.1 -6.9" rotation="0 0 0" scale="1.5 1.5 1.5"></a-entity>
+    <!-- benches along back wall -->
+    <a-entity position="0 0 -6.29" rotation="0 0 0">
+      <a-entity gltf-model="#bench" scale="1.5 1.5 1.5"></a-entity>
+      <a-entity gltf-model="#bench2" position="0 0.8 0" scale="1.5 1.5 1.5"></a-entity>
+      <a-box class="clickable" bench-seat="sitX: 0; sitY: 0.6; sitZ: -6.29" width="1.8" height="0.5" depth="0.8" position="0 0.25 0" material="opacity: 0; transparent: true"></a-box>
+      <a-entity class="bench-tooltip" visible="false" position="0 1.1 0">
+        <a-plane width="1.2" height="0.3" color="#222" material="transparent: true; opacity: 0.85"></a-plane>
+        <a-text value="Usiadz" align="center" width="2" position="0 0 0.01" color="#ffffff" scale="0.5 0.5 0.5"></a-text>
+      </a-entity>
+    </a-entity>
+    <a-entity position="2 0 -6.29" rotation="0 0 0">
+      <a-entity gltf-model="#bench" scale="1.5 1.5 1.5"></a-entity>
+      <a-entity gltf-model="#bench2" position="0 0.8 0" scale="1.5 1.5 1.5"></a-entity>
+      <a-box class="clickable" bench-seat="sitX: 2; sitY: 0.6; sitZ: -6.29" width="1.8" height="0.5" depth="0.8" position="0 0.25 0" material="opacity: 0; transparent: true"></a-box>
+      <a-entity class="bench-tooltip" visible="false" position="0 1.1 0">
+        <a-plane width="1.2" height="0.3" color="#222" material="transparent: true; opacity: 0.85"></a-plane>
+        <a-text value="Usiadz" align="center" width="2" position="0 0 0.01" color="#ffffff" scale="0.5 0.5 0.5"></a-text>
+      </a-entity>
+    </a-entity>
+    <a-entity position="-2 0 -6.29" rotation="0 0 0">
+      <a-entity gltf-model="#bench" scale="1.5 1.5 1.5"></a-entity>
+      <a-entity gltf-model="#bench2" position="0 0.8 0" scale="1.5 1.5 1.5"></a-entity>
+      <a-box class="clickable" bench-seat="sitX: -2; sitY: 0.6; sitZ: -6.29" width="1.8" height="0.5" depth="0.8" position="0 0.25 0" material="opacity: 0; transparent: true"></a-box>
+      <a-entity class="bench-tooltip" visible="false" position="0 1.1 0">
+        <a-plane width="1.2" height="0.3" color="#222" material="transparent: true; opacity: 0.85"></a-plane>
+        <a-text value="Usiadz" align="center" width="2" position="0 0 0.01" color="#ffffff" scale="0.5 0.5 0.5"></a-text>
+      </a-entity>
+    </a-entity>
     <!-- benches along side walls -->
-    <a-entity gltf-model="#bench" position="-3.6 0.35 -5" rotation="0 90 0" scale="1.5 1.5 1.5"></a-entity>
-    <a-entity gltf-model="#bench" position="3.6 0.35 -5" rotation="0 -90 0" scale="1.5 1.5 1.5"></a-entity>
+    <a-entity position="-3.6 0 -4" rotation="0 90 0">
+      <a-entity gltf-model="#bench" scale="1.5 1.5 1.5"></a-entity>
+      <a-box class="clickable" bench-seat="sitX: -3.2; sitY: 0.6; sitZ: -4" width="1.8" height="0.5" depth="0.8" position="0 0.25 0" material="opacity: 0; transparent: true"></a-box>
+      <a-entity class="bench-tooltip" visible="false" position="0 1.1 0">
+        <a-plane width="1.2" height="0.3" color="#222" material="transparent: true; opacity: 0.85"></a-plane>
+        <a-text value="Usiadz" align="center" width="2" position="0 0 0.01" color="#ffffff" scale="0.5 0.5 0.5"></a-text>
+      </a-entity>
+    </a-entity>
+    <a-entity position="3.6 0 -4" rotation="0 -90 0">
+      <a-entity gltf-model="#bench" scale="1.5 1.5 1.5"></a-entity>
+      <a-box class="clickable" bench-seat="sitX: 3.2; sitY: 0.6; sitZ: -4" width="1.8" height="0.5" depth="0.8" position="0 0.25 0" material="opacity: 0; transparent: true"></a-box>
+      <a-entity class="bench-tooltip" visible="false" position="0 1.1 0">
+        <a-plane width="1.2" height="0.3" color="#222" material="transparent: true; opacity: 0.85"></a-plane>
+        <a-text value="Usiadz" align="center" width="2" position="0 0 0.01" color="#ffffff" scale="0.5 0.5 0.5"></a-text>
+      </a-entity>
+    </a-entity>
 
     <!-- stove, bucket, and ladle near left-front corner -->
-    <a-entity gltf-model="#stove" position="-3 0 -5.5" rotation="0 45 0" scale="0.8 0.8 0.8"></a-entity>
-    <a-entity gltf-model="#bucket" position="-2.2 0 -5" rotation="0 0 0" scale="0.6 0.6 0.6"></a-entity>
-    <a-entity gltf-model="#ladle" position="-2.6 0.9 -5.3" rotation="0 30 0" scale="0.4 0.4 0.4"></a-entity>
+    <a-entity id="stove-entity" position="-3.2 0 -6.5" rotation="0 -115 0">
+      <a-entity gltf-model="#stove" scale="2.1 2.1 2.1"></a-entity>
+      <a-entity id="stove-steam" position="0 1.7 0.1"></a-entity>
+    </a-entity>
+    <a-entity gltf-model="#bucket" position="-3.3 0 -5.5" rotation="0 15 0" scale="0.6 0.6 0.6"></a-entity>
+    <a-entity
+      id="ladle-interactive"
+      position="-3.4 0.69 -5.1"
+      rotation="0 30 90">
+      <a-entity gltf-model="#ladle" scale="1.2 1.2 1.2"></a-entity>
+      <a-box
+        class="clickable"
+        ladle-interaction
+        width="0.35"
+        height="0.2"
+        depth="0.55"
+        material="opacity: 0; transparent: true"
+        position="0 0 0">
+      </a-box>
+      <a-entity id="ladle-tooltip" visible="false" position="0 0.55 0" rotation="0 0 90">
+        <a-plane width="1.6" height="0.35" color="#222" opacity="0.85" material="transparent: true; opacity: 0.85"></a-plane>
+        <a-text
+          value="Podkrec temperature"
+          align="center"
+          width="2"
+          position="0 0 0.01"
+          color="#ffffff"
+          scale="0.5 0.5 0.5">
+        </a-text>
+      </a-entity>
+    </a-entity>
+
+    <!-- timer placeholder on right wall -->
+    <a-entity id="timer-device" position="3.85 1.5 -2.5" rotation="0 -90 0">
+      <a-box
+        class="clickable"
+        timer-device
+        width="0.55"
+        height="0.35"
+        depth="0.1"
+        color="#1a1a1a"
+        material="color: #1a1a1a">
+      </a-box>
+      <a-text
+        value="TIMER"
+        align="center"
+        position="0 0 0.06"
+        color="#4ecca3"
+        scale="0.3 0.3 0.3"
+        width="4">
+      </a-text>
+      <a-entity id="timer-tooltip" visible="false" position="0 0.35 0">
+        <a-plane width="1.1" height="0.28" color="#222" material="transparent: true; opacity: 0.85"></a-plane>
+        <a-text value="Ustaw timer" align="center" width="2" position="0 0 0.01" color="#ffffff" scale="0.4 0.4 0.4"></a-text>
+      </a-entity>
+      <a-entity id="timer-menu" visible="false" position="0 0 0.35">
+        <a-plane width="0.7" height="0.95" color="#111" material="transparent: true; opacity: 0.9" position="0 0 0"></a-plane>
+        <a-plane class="clickable" timer-option="minutes: 5" position="0 0.28 0.01" width="0.55" height="0.18" color="#333" material="color: #333">
+          <a-text value="5 min" align="center" position="0 0 0.01" color="#ffffff" scale="0.35 0.35 0.35"></a-text>
+        </a-plane>
+        <a-plane class="clickable" timer-option="minutes: 10" position="0 0.05 0.01" width="0.55" height="0.18" color="#333" material="color: #333">
+          <a-text value="10 min" align="center" position="0 0 0.01" color="#ffffff" scale="0.35 0.35 0.35"></a-text>
+        </a-plane>
+        <a-plane class="clickable" timer-option="minutes: 15" position="0 -0.18 0.01" width="0.55" height="0.18" color="#333" material="color: #333">
+          <a-text value="15 min" align="center" position="0 0 0.01" color="#ffffff" scale="0.35 0.35 0.35"></a-text>
+        </a-plane>
+      </a-entity>
+    </a-entity>
 
     <a-entity id = "rig" position= "0 0 2">
     <a-camera id= "player" position="0 1.6 2" wasd-controls="acceleration: 20; fly:false" look-controls>
- <a-cursor></a-cursor>
+ <a-cursor
+        raycaster="objects: .clickable"
+        fuse="false"
+        material="color: #ffffff; shader: flat"
+        geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02">
+      </a-cursor>
 
-  <a-plane 
-    id="Button"
-    position="0 -0.5 -1"
-    width="0.6"
-    height="0.25"
-    color="#222"
-    text="value: USIaDz; align: center; color: #fff">
-      </a-plane>
     </a-camera>
     </a-entity>
 
     <!-- do skryptu z swiatelkiem-->
       <a-light id="Light" type="point" position="0 3 -4" intensity="0.2" color="#ffffff"> </a-light>
-      <a-box position="-3.3 1.05 -3" width="0.6" height="0.1" color="#000000"></a-box> //whole scene
 
       <a-box position="0 1 -6" width="2" height="2" depth="2" visible="false" proximity-light> </a-box> //trigger zone
   <!-- scena-->
       <a-box position="-4 2 -4" rotation="0 90 0" width ="8" height="4" depth="0.1" color="#C2A580"></a-box> //backWall
       <a-box position="4 2 -4" rotation="0 90 0" width= "8" height ="4" depth="0.1" color="#C2A580"></a-box> //right wall
       <a-plane position="0 0 -4" rotation="-90 0 0" width="8" height ="8" color="#BE9F79"></a-plane> //flooring
-      <a-cylinder position="-3.3 0.3 -1" radius="0.5" height="0.5" color="#FFC65D"></a-cylinder>
+     
       <a-box position="0 2 -8" width ="8" height="4" depth= "0.1" color="#C2A580"></a-box>
-      <a-box position="-3.3 0.5 -3" color="#51E9F0"></a-box>
 
 
       <a-sky color="#000000"></a-sky>
