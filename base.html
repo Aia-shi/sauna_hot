@@ -1,8 +1,8 @@
 <html>
   <head>
     <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
-    
-
+    <script src="https://cdn.jsdelivr.net/npm/aframe-physics-system/dist/aframe-physics-system.min.js"></script>
+    <script src="https://unpkg.com/super-hands@5.0.4/dist/super-hands.min.js"></script>
     <!-- script for dimming light for rig respawn poit to backwall-->
     <script>
 
@@ -204,56 +204,10 @@
         }
       });
 
-      AFRAME.registerComponent('bench-seat', {
-        schema: {
-          sitX: { type: 'number', default: 0 },
-          sitY: { type: 'number', default: 0.6 },
-          sitZ: { type: 'number', default: -6.29 }
-        },
-        init: function () {
-          const root = this.el.parentEl;
-          this.tooltip = root.querySelector('.bench-tooltip');
-          this.rig = document.querySelector('#rig');
-          this.sitting = false;
-          this.defaultPosition = { x: 0, y: 0, z: 2 };
 
-          this.showTooltip = () => {
-            if (this.tooltip) this.tooltip.setAttribute('visible', true);
-          };
-          this.hideTooltip = () => {
-            if (this.tooltip) this.tooltip.setAttribute('visible', false);
-          };
-          this.toggleSit = () => {
-            if (!this.rig) return;
-            if (!this.sitting) {
-              this.rig.setAttribute('animation', {
-                property: 'position',
-                to: `${this.data.sitX} ${this.data.sitY} ${this.data.sitZ}`,
-                dur: 800,
-                easing: 'easeInOutQuad'
-              });
-              this.sitting = true;
-            } else {
-              this.rig.setAttribute('animation', {
-                property: 'position',
-                to: `${this.defaultPosition.x} ${this.defaultPosition.y} ${this.defaultPosition.z}`,
-                dur: 800,
-                easing: 'easeInOutQuad'
-              });
-              this.sitting = false;
-            }
-          };
-
-          this.el.addEventListener('mouseenter', this.showTooltip);
-          this.el.addEventListener('mouseleave', this.hideTooltip);
-          this.el.addEventListener('click', this.toggleSit);
-        },
-        remove: function () {
-          this.el.removeEventListener('mouseenter', this.showTooltip);
-          this.el.removeEventListener('mouseleave', this.hideTooltip);
-          this.el.removeEventListener('click', this.toggleSit);
-        }
-      });
+    if (window.location.protocol === 'file:') {
+      document.getElementById('file-warning').style.display = 'block';
+    }
 
     </script>
 
@@ -279,12 +233,10 @@
     dwuklik na <strong>start-server.bat</strong> i otwórz http://localhost:5500/base.html
     (adres powinien zaczynać się od http://localhost, nie file://).
   </div>
-  <script>
-    if (window.location.protocol === 'file:') {
-      document.getElementById('file-warning').style.display = 'block';
-    }
-  </script>
-  <a-scene fog="type: linear; color: #C2A580; near: 5; far: 10">
+
+  <a-scene physics="gravity: -9.8" 
+           fog="type: linear; color: #C2A580; near: 3; far: 8;">
+
   <!-- assety-->
     <a-assets>
       <a-asset-item id="bench" src="bench.glb"></a-asset-item>
@@ -292,146 +244,111 @@
       <a-asset-item id="stove" src="Stove1.glb"></a-asset-item>
       <a-asset-item id="ladle" src="Ladle.glb"></a-asset-item>
       <a-asset-item id="bucket" src="Bucket.glb"></a-asset-item>
+      <a-asset-item id="door" src="doors.glb"></a-asset-item>
+      <a-asset-item id="coal" src="wegiel.glb"></a-asset-item>
     </a-assets>
 
     <!-- benches along back wall -->
-    <a-entity position="0 0 -6.29" rotation="0 0 0">
-      <a-entity gltf-model="#bench" scale="1.5 1.5 1.5"></a-entity>
-      <a-entity gltf-model="#bench2" position="0 0.8 0" scale="1.5 1.5 1.5"></a-entity>
-      <a-box class="clickable" bench-seat="sitX: 0; sitY: 0.6; sitZ: -6.29" width="1.8" height="0.5" depth="0.8" position="0 0.25 0" material="opacity: 0; transparent: true"></a-box>
-      <a-entity class="bench-tooltip" visible="false" position="0 1.1 0">
-        <a-plane width="1.2" height="0.3" color="#222" material="transparent: true; opacity: 0.85"></a-plane>
-        <a-text value="Usiadz" align="center" width="2" position="0 0 0.01" color="#ffffff" scale="0.5 0.5 0.5"></a-text>
-      </a-entity>
-    </a-entity>
-    <a-entity position="2 0 -6.29" rotation="0 0 0">
-      <a-entity gltf-model="#bench" scale="1.5 1.5 1.5"></a-entity>
-      <a-entity gltf-model="#bench2" position="0 0.8 0" scale="1.5 1.5 1.5"></a-entity>
-      <a-box class="clickable" bench-seat="sitX: 2; sitY: 0.6; sitZ: -6.29" width="1.8" height="0.5" depth="0.8" position="0 0.25 0" material="opacity: 0; transparent: true"></a-box>
-      <a-entity class="bench-tooltip" visible="false" position="0 1.1 0">
-        <a-plane width="1.2" height="0.3" color="#222" material="transparent: true; opacity: 0.85"></a-plane>
-        <a-text value="Usiadz" align="center" width="2" position="0 0 0.01" color="#ffffff" scale="0.5 0.5 0.5"></a-text>
-      </a-entity>
-    </a-entity>
+      <a-entity gltf-model="#bench" position="-1 0.1 -6.69" rotation="0 0 0" scale="1.5 1.5 1.5"></a-entity>
+      <a-entity gltf-model="#bench2" position="0 0.8 -6.29" scale="1.5 1.5 1.5"></a-entity>
+  
+      <a-entity gltf-model="#bench" position="1 0.1 -6.69" rotation="0 0 0" scale="1.5 1.5 1.5"></a-entity>
+      <a-entity gltf-model="#bench2" position="2 0.8 -6.29" scale="1.5 1.5 1.5"></a-entity>
+
+  
     <a-entity position="-2 0 -6.29" rotation="0 0 0">
-      <a-entity gltf-model="#bench" scale="1.5 1.5 1.5"></a-entity>
       <a-entity gltf-model="#bench2" position="0 0.8 0" scale="1.5 1.5 1.5"></a-entity>
-      <a-box class="clickable" bench-seat="sitX: -2; sitY: 0.6; sitZ: -6.29" width="1.8" height="0.5" depth="0.8" position="0 0.25 0" material="opacity: 0; transparent: true"></a-box>
-      <a-entity class="bench-tooltip" visible="false" position="0 1.1 0">
-        <a-plane width="1.2" height="0.3" color="#222" material="transparent: true; opacity: 0.85"></a-plane>
-        <a-text value="Usiadz" align="center" width="2" position="0 0 0.01" color="#ffffff" scale="0.5 0.5 0.5"></a-text>
-      </a-entity>
     </a-entity>
-    <!-- benches along side walls -->
+    
+  <!-- left wall bench -->
     <a-entity position="-3.6 0 -4" rotation="0 90 0">
       <a-entity gltf-model="#bench" scale="1.5 1.5 1.5"></a-entity>
-      <a-box class="clickable" bench-seat="sitX: -3.2; sitY: 0.6; sitZ: -4" width="1.8" height="0.5" depth="0.8" position="0 0.25 0" material="opacity: 0; transparent: true"></a-box>
-      <a-entity class="bench-tooltip" visible="false" position="0 1.1 0">
-        <a-plane width="1.2" height="0.3" color="#222" material="transparent: true; opacity: 0.85"></a-plane>
-        <a-text value="Usiadz" align="center" width="2" position="0 0 0.01" color="#ffffff" scale="0.5 0.5 0.5"></a-text>
-      </a-entity>
-    </a-entity>
-    <a-entity position="3.6 0 -4" rotation="0 -90 0">
-      <a-entity gltf-model="#bench" scale="1.5 1.5 1.5"></a-entity>
-      <a-box class="clickable" bench-seat="sitX: 3.2; sitY: 0.6; sitZ: -4" width="1.8" height="0.5" depth="0.8" position="0 0.25 0" material="opacity: 0; transparent: true"></a-box>
-      <a-entity class="bench-tooltip" visible="false" position="0 1.1 0">
-        <a-plane width="1.2" height="0.3" color="#222" material="transparent: true; opacity: 0.85"></a-plane>
-        <a-text value="Usiadz" align="center" width="2" position="0 0 0.01" color="#ffffff" scale="0.5 0.5 0.5"></a-text>
-      </a-entity>
     </a-entity>
 
+    <!-- right wall bench -->
+    <a-entity position="3.6 0 -4" rotation="0 -90 0">
+      <a-entity gltf-model="#bench" scale="1.5 1.5 1.5"></a-entity>
+    </a-entity>
+
+    <a-entity gltf-model="#door" scale="1 0.8 1"></a-entity>
+
     <!-- stove, bucket, and ladle near left-front corner -->
+
+    <a-entity gltf-model="#coal" position="-3 0.1 -4.5" scale="0.4 0.4 0.4" grabbable dynamic-body="shape: hull"> </a-entity>
+
     <a-entity id="stove-entity" position="-3.2 0 -6.5" rotation="0 -115 0">
       <a-entity gltf-model="#stove" scale="2.1 2.1 2.1"></a-entity>
-      <a-entity id="stove-steam" position="0 1.7 0.1"></a-entity>
+      <a-entity id="stove-steam" position="0 1.0 0.1"></a-entity>
     </a-entity>
     <a-entity gltf-model="#bucket" position="-3.3 0 -5.5" rotation="0 15 0" scale="0.6 0.6 0.6"></a-entity>
-    <a-entity
-      id="ladle-interactive"
-      position="-3.4 0.69 -5.1"
-      rotation="0 30 90">
+
+    <a-entity id="ladle-interactive" position="-3.4 0.69 -5.1" rotation="0 30 90">
       <a-entity gltf-model="#ladle" scale="1.2 1.2 1.2"></a-entity>
-      <a-box
-        class="clickable"
-        ladle-interaction
-        width="0.35"
-        height="0.2"
-        depth="0.55"
-        material="opacity: 0; transparent: true"
-        position="0 0 0">
-      </a-box>
-      <a-entity id="ladle-tooltip" visible="false" position="0 0.55 0" rotation="0 0 90">
-        <a-plane width="1.6" height="0.35" color="#222" opacity="0.85" material="transparent: true; opacity: 0.85"></a-plane>
-        <a-text
-          value="Podkrec temperature"
-          align="center"
-          width="2"
-          position="0 0 0.01"
-          color="#ffffff"
-          scale="0.5 0.5 0.5">
-        </a-text>
+      <a-box class="clickable" ladle-interaction width="0.35" height="0.2" depth="0.55" material="opacity: 0; transparent: true" position="0 0 0"> </a-box>
+      <a-entity id="ladle-tooltip" visible="false" position="0.5 -0.4 0.4" rotation="0 0 270">
+        <a-plane width="1.2" height="0.35" color="#222" opacity="0.85" material="transparent: true; opacity: 0.85"> </a-plane>
+        <a-text value="Grzanie" align="center" width="2" position="0 0 0.01" color="#ffffff" scale="0.5 0.5 0.5"> </a-text>
       </a-entity>
     </a-entity>
 
     <!-- timer placeholder on right wall -->
     <a-entity id="timer-device" position="3.85 1.5 -2.5" rotation="0 -90 0">
-      <a-box
-        class="clickable"
-        timer-device
-        width="0.55"
-        height="0.35"
-        depth="0.1"
-        color="#1a1a1a"
-        material="color: #1a1a1a">
-      </a-box>
-      <a-text
-        value="TIMER"
-        align="center"
-        position="0 0 0.06"
-        color="#4ecca3"
-        scale="0.3 0.3 0.3"
-        width="4">
-      </a-text>
+      <a-box class="clickable" timer-device width="0.55" height="0.35" depth="0.1" color="#1a1a1a" material="color: #1a1a1a"> </a-box>
+      <a-text value="TIMER" align="center" position="0 0 0.06" color="#4ecca3" scale="0.3 0.3 0.3" width="4"> </a-text>
+
       <a-entity id="timer-tooltip" visible="false" position="0 0.35 0">
         <a-plane width="1.1" height="0.28" color="#222" material="transparent: true; opacity: 0.85"></a-plane>
         <a-text value="Ustaw timer" align="center" width="2" position="0 0 0.01" color="#ffffff" scale="0.4 0.4 0.4"></a-text>
       </a-entity>
+
       <a-entity id="timer-menu" visible="false" position="0 0 0.35">
+
         <a-plane width="0.7" height="0.95" color="#111" material="transparent: true; opacity: 0.9" position="0 0 0"></a-plane>
+
         <a-plane class="clickable" timer-option="minutes: 5" position="0 0.28 0.01" width="0.55" height="0.18" color="#333" material="color: #333">
           <a-text value="5 min" align="center" position="0 0 0.01" color="#ffffff" scale="0.35 0.35 0.35"></a-text>
         </a-plane>
+
         <a-plane class="clickable" timer-option="minutes: 10" position="0 0.05 0.01" width="0.55" height="0.18" color="#333" material="color: #333">
           <a-text value="10 min" align="center" position="0 0 0.01" color="#ffffff" scale="0.35 0.35 0.35"></a-text>
         </a-plane>
+
         <a-plane class="clickable" timer-option="minutes: 15" position="0 -0.18 0.01" width="0.55" height="0.18" color="#333" material="color: #333">
           <a-text value="15 min" align="center" position="0 0 0.01" color="#ffffff" scale="0.35 0.35 0.35"></a-text>
         </a-plane>
+
       </a-entity>
     </a-entity>
 
-    <a-entity id = "rig" position= "0 0 2">
-    <a-camera id= "player" position="0 1.6 2" wasd-controls="acceleration: 20; fly:false" look-controls>
- <a-cursor
-        raycaster="objects: .clickable"
-        fuse="false"
-        material="color: #ffffff; shader: flat"
-        geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02">
-      </a-cursor>
-
-    </a-camera>
+  <a-entity id = "rig" position= "0 0 -3">
+    <a-entity
+    hand-controls="hand: left"
+    sphere-collider="objects: .grabbable"
+    super-hands>
     </a-entity>
 
+    <a-entity
+    hand-controls="hand: right"
+    sphere-collider="objects: .grabbable"
+    super-hands>
+    </a-entity>>
+
+      <a-camera id= "player" position="0 1.6 2" wasd-controls="acceleration: 10; fly:false" look-controls>
+        <a-cursor raycaster="objects: .clickable" fuse="false" material="color: #ffffff; shader: flat" geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"> </a-cursor>
+      </a-camera>
+  </a-entity>
+
     <!-- do skryptu z swiatelkiem-->
-      <a-light id="Light" type="point" position="0 3 -4" intensity="0.2" color="#ffffff"> </a-light>
+      <a-light id="Light" type="point" position="0 3 -6" intensity="0.2" color="#FFD39B"> </a-light>
 
       <a-box position="0 1 -6" width="2" height="2" depth="2" visible="false" proximity-light> </a-box> //trigger zone
   <!-- scena-->
       <a-box position="-4 2 -4" rotation="0 90 0" width ="8" height="4" depth="0.1" color="#C2A580"></a-box> //backWall
       <a-box position="4 2 -4" rotation="0 90 0" width= "8" height ="4" depth="0.1" color="#C2A580"></a-box> //right wall
       <a-plane position="0 0 -4" rotation="-90 0 0" width="8" height ="8" color="#BE9F79"></a-plane> //flooring
-     
+      <a-plane position="0 4 -4" rotation="90 0 0" width="8" height ="8" color="#BE9F79"></a-plane> //celling
       <a-box position="0 2 -8" width ="8" height="4" depth= "0.1" color="#C2A580"></a-box>
+      <a-box position="0 2 0" rotation="0 180 0" width ="8" height="4" depth="0.1" color="#C2A580"></a-box> //backWall
 
 
       <a-sky color="#000000"></a-sky>
