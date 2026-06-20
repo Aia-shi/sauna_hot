@@ -12,7 +12,7 @@
         {
           this.player = document.querySelector('#player');
           this.light = document.querySelector('#Light');
-          this.current = 0.6; // starting dim light
+          this.current = 0.4; // starting dim light
         }, tick: function () 
         
         {
@@ -21,9 +21,9 @@
 
           const distance = playerPos.distanceTo(zonePos);
 
-          const target = distance < 2 ? 1 : 0.2;
+          const target = distance < 4 ? 1 : 0.5;
 
-          this.current += (target - this.current) * 0.05;
+          this.current += (target - this.current) * 0.1;
           this.light.setAttribute('intensity', this.current); // smooth transition
         }
       });
@@ -229,9 +229,8 @@
     <div id="timer-countdown" style="font-size:32px;font-weight:bold;">15:00</div>
   </div>
   <div id="file-warning" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#c0392b;color:#fff;padding:12px 16px;font-family:sans-serif;font-size:14px;">
-    Modele 3D (.glb) nie działają przez file://. Uruchom stronę przez serwer HTTP:
-    dwuklik na <strong>start-server.bat</strong> i otwórz http://localhost:5500/base.html
-    (adres powinien zaczynać się od http://localhost, nie file://).
+  <strong>start-server.bat</strong> http://localhost:5500/base.html
+
   </div>
 
   <a-scene physics="gravity: -9.8" 
@@ -339,7 +338,7 @@
   </a-entity>
 
     <!-- do skryptu z swiatelkiem-->
-      <a-light id="Light" type="point" position="0 3 -6" intensity="0.2" color="#FFD39B"> </a-light>
+      <a-light id="Light" type="point" position="0 2 -4.5" intensity="0.2" color="#FFD39B"> </a-light>
 
       <a-box position="0 1 -6" width="2" height="2" depth="2" visible="false" proximity-light> </a-box> //trigger zone
   <!-- scena-->
